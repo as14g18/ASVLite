@@ -1,4 +1,4 @@
-### Simulating an ASV Swarm for Marine Environments using ASVLite
+# Simulating an ASV Swarm for Marine Environments using ASVLite
 
 ## Introduction
 ASV swarms can be difficult and expensive to deploy in the real world, which is why high-fidelity simulations are required to design and test ASVs before deploying them. In this paper, we propose a high-performance, high-fidelity ASV swarm simulator rendering tool. The tool will allow users to visualise different swarm behaviours such as line-sweeping, patrolling, and station-keeping. A behaviour-based approach is used to train the ASVs in conjunction with PID controllers to control the ASV actuation. In addition, the swarm of ASVs is a sparse swarm, meaning the ASVs are around 1,000 body lengths apart. Two low-power, long-range wireless communications systems, LoRaWAN and Iridium Satellite Constellation, are compared to more accurately model the latency that would be experienced in such a decentralised sparse swarm. 
