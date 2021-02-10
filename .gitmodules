@@ -1,3 +1,6 @@
 [submodule "dependency/tomlc99"]
 	path = dependency/tomlc99
 	url = https://github.com/cktan/tomlc99.git
+[submodule "osgocean"]
+	path = osgocean
+	url = https://github.com/as14g18/osgocean
