@@ -847,7 +847,7 @@ void simulation_run(struct Simulation* first_node)
 
 void simulation_run_with_visualisation(struct Simulation* first_node)
 {
-  int fd = open("../renderer_fifo", O_WRONLY);
+  int fd = open("/home/akhi/Documents/p3project/ASVLite/renderer_fifo", O_WRONLY);
 
   if (mkfifo("../renderer_fifo", 0666) == -1) {
     if (errno != EEXIST) {
@@ -855,6 +855,12 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
       return 1;
     }
   }
+
+  int counter = 0;
+  const char *a[3];
+  a[0] = "CREATE 1 10 20 20";
+  a[1] = "MOVE 1 10 15 20";
+  a[2] = "MOVE 1 10 20 20";
 
   bool buffer_exceeded = false;
   for(long t = 0; ; ++t)
@@ -864,10 +870,12 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
 
     simulation_for_time_step(first_node, t, &buffer_exceeded, &has_all_reached_final_waypoint);
 
-    char send_str[] = "test";
-    int send_str_len = strlen(send_str) + 1;
-    // write(fd, &send_str_len, sizeof(int));
-    write(fd, send_str, sizeof(char) * send_str_len);
+    // char send_str[];
+    // strcpy(send_str, a[counter++]);
+    int send_str_len = strlen(a[counter]) + 1;
+    write(fd, &send_str_len, sizeof(int));
+    write(fd, a[counter], sizeof(char) * send_str_len);
+    counter = (counter + 1) % 3;
 
     // stop if all reached the destination or if buffer exceeded.
     if(has_all_reached_final_waypoint || buffer_exceeded)
