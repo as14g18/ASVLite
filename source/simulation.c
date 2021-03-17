@@ -845,6 +845,13 @@ void simulation_run(struct Simulation* first_node)
   }
 }
 
+void send_message_through_pipe(char send_str[], int fd)
+{
+  int send_str_len = strlen(send_str) + 1;
+  write(fd, &send_str_len, sizeof(int));
+  write(fd, send_str, sizeof(char) * send_str_len);
+}
+
 void simulation_run_with_visualisation(struct Simulation* first_node)
 {
   int fd = open("/home/akhi/Documents/p3project/ASVLite/renderer_fifo", O_WRONLY);
@@ -856,11 +863,25 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
     }
   }
 
-  int counter = 0;
-  const char *a[3];
-  a[0] = "CREATE 1 10 20 20";
-  a[1] = "MOVE 1 10 15 20";
-  a[2] = "MOVE 1 10 20 20";
+  for(struct Simulation* node = first_node; node != NULL; node = node->next)
+  {
+    printf("ID: %d", node->id);
+    char create_str[32];
+    snprintf(create_str, sizeof(create_str), "CREATE %d 1 2 3", node->id);
+    send_message_through_pipe(create_str, fd);
+
+    char move_str[32];
+    snprintf(
+      move_str,
+      sizeof(move_str),
+      "MOVE %d %d %d %d",
+      node->id,
+      (int)node->asv->origin_position.x,
+      (int)node->asv->origin_position.y,
+      (int)node->asv->origin_position.z
+    );
+    send_message_through_pipe(move_str, fd);
+  }
 
   bool buffer_exceeded = false;
   for(long t = 0; ; ++t)
@@ -870,12 +891,20 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
 
     simulation_for_time_step(first_node, t, &buffer_exceeded, &has_all_reached_final_waypoint);
 
-    // char send_str[];
-    // strcpy(send_str, a[counter++]);
-    int send_str_len = strlen(a[counter]) + 1;
-    write(fd, &send_str_len, sizeof(int));
-    write(fd, a[counter], sizeof(char) * send_str_len);
-    counter = (counter + 1) % 3;
+    for(struct Simulation* node = first_node; node != NULL; node = node->next)
+    {
+      char move_str[32];
+      snprintf(
+        move_str,
+        sizeof(move_str),
+        "MOVE %d %d %d %d",
+        node->id,
+        (int)node->asv->origin_position.x,
+        (int)node->asv->origin_position.y,
+        (int)node->asv->origin_position.z
+      );
+      send_message_through_pipe(move_str, fd);
+    }
 
     // stop if all reached the destination or if buffer exceeded.
     if(has_all_reached_final_waypoint || buffer_exceeded)
