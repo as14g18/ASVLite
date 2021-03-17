@@ -2,6 +2,11 @@
 #include "toml.h"
 #include "simulation.h"
 #include <sys/stat.h> // for creating directory
+#include <unistd.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
 
 // One wave for all ASVs
 static struct Wave wave;
@@ -838,6 +843,40 @@ void simulation_run(struct Simulation* first_node)
       break;
     }
   }
+}
+
+void simulation_run_with_visualisation(struct Simulation* first_node)
+{
+  int fd = open("../renderer_fifo", O_WRONLY);
+
+  if (mkfifo("../renderer_fifo", 0666) == -1) {
+    if (errno != EEXIST) {
+      printf("Error creating fifo\n");
+      return 1;
+    }
+  }
+
+  bool buffer_exceeded = false;
+  for(long t = 0; ; ++t)
+  {
+    // Variable to check if all reached the destination.
+    bool has_all_reached_final_waypoint = true;
+
+    simulation_for_time_step(first_node, t, &buffer_exceeded, &has_all_reached_final_waypoint);
+
+    char send_str[] = "test";
+    int send_str_len = strlen(send_str) + 1;
+    // write(fd, &send_str_len, sizeof(int));
+    write(fd, send_str, sizeof(char) * send_str_len);
+
+    // stop if all reached the destination or if buffer exceeded.
+    if(has_all_reached_final_waypoint || buffer_exceeded)
+    {
+      break;
+    }
+  }
+
+  close(fd);
 }
 
 void simulation_run_without_time_sync(struct Simulation* first_node)
