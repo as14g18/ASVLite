@@ -863,6 +863,10 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
     }
   }
 
+  char bound_str[1024];
+  snprintf(bound_str, sizeof(bound_str), "BOUND 0 300 500 1500 3");
+  send_message_through_pipe(bound_str, fd);
+
   for(struct Simulation* node = first_node; node != NULL; node = node->next)
   {
     char create_str[1024];
