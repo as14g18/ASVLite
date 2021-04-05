@@ -865,22 +865,9 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
 
   for(struct Simulation* node = first_node; node != NULL; node = node->next)
   {
-    printf("ID: %d", node->id);
-    char create_str[32];
-    snprintf(create_str, sizeof(create_str), "CREATE %d 1 2 3", node->id);
+    char create_str[1024];
+    snprintf(create_str, sizeof(create_str), "CREATE %d 3 6 3", node->id);
     send_message_through_pipe(create_str, fd);
-
-    char move_str[32];
-    snprintf(
-      move_str,
-      sizeof(move_str),
-      "MOVE %d %d %d %d",
-      node->id,
-      (int)node->asv->origin_position.x,
-      (int)node->asv->origin_position.y,
-      (int)node->asv->origin_position.z
-    );
-    send_message_through_pipe(move_str, fd);
   }
 
   bool buffer_exceeded = false;
@@ -893,16 +880,31 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
 
     for(struct Simulation* node = first_node; node != NULL; node = node->next)
     {
-      char move_str[32];
+      char move_str[1024];
       snprintf(
         move_str,
         sizeof(move_str),
-        "MOVE %d %d %d %d",
+        "MOVE %d %f %f %f %f %f %f",
         node->id,
-        (int)node->asv->origin_position.x,
-        (int)node->asv->origin_position.y,
-        (int)node->asv->origin_position.z
+        node->asv->origin_position.x,
+        node->asv->origin_position.y,
+        node->asv->origin_position.z,
+        node->asv->attitude.z,
+        node->asv->attitude.x,
+        node->asv->attitude.y
       );
+
+      printf(
+        "MOVE %d %f %f %f %f %f %f",
+        node->id,
+        node->asv->origin_position.x,
+        node->asv->origin_position.y,
+        node->asv->origin_position.z,
+        node->asv->attitude.z,
+        node->asv->attitude.x,
+        node->asv->attitude.y
+      );
+
       send_message_through_pipe(move_str, fd);
     }
 
