@@ -852,9 +852,30 @@ void send_message_through_pipe(char send_str[], int fd)
   write(fd, send_str, sizeof(char) * send_str_len);
 }
 
+struct message
+{
+  string payload;
+  string to;
+  string from;
+}
+
+void addCreateIfNew(nordered_map<int,vector<message>>& communication_queue, int t, message m)
+{
+  if (communication_queue.count(t) == 0) {
+    communication_queue[t] = vector<message>();
+  }
+
+  communication_queue[t].push_back(m);
+}
+
 void simulation_run_with_visualisation(struct Simulation* first_node)
 {
   int fd = open("/home/akhi/Documents/p3project/ASVLite/renderer_fifo", O_WRONLY);
+
+  int latency = 5;
+  float range = 100;
+  int delay = 20;
+  unordered_map<int,vector<message>> communication_queue;
 
   if (mkfifo("../renderer_fifo", 0666) == -1) {
     if (errno != EEXIST) {
@@ -910,6 +931,24 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
       );
 
       send_message_through_pipe(move_str, fd);
+    }
+
+    for (auto message : communication_queue[t]) {
+      if (message.payload == "REQUEST") {
+        message m = {
+          "INFORMATION",
+          message.from,
+          message.to
+        };
+        addCreateIfNew(communication_queue, t+latency, m)
+      } else if (message.payload == "INFORMATION") {
+        message m = {
+          "ACK",
+          message.from,
+          message.to
+        };
+        addCreateIfNew(communication_queue, t+latency, m);
+      }
     }
 
     // stop if all reached the destination or if buffer exceeded.
