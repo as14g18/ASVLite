@@ -5,6 +5,10 @@ ASV swarms can be difficult and expensive to deploy in the real world, which is 
 
 The simulator being used for this project is [ASVLite: a high-performance simulator for autonomous surface vehicles](https://arxiv.org/abs/2003.04599).
 
+The image below show visualisation of the ocean surface and three ASVs simulated by ASVLite.
+
+![visualisation](./simulator.png)
+
 ## Build instruction
 ``` 
 git clone --recurse-submodules https://github.com/resilient-swarms/asv-swarm.git
@@ -16,6 +20,7 @@ make
 ```
 
 ## Running the simulator
+
 The simulator requires the following values as command-line arguments:
 1. input file, 
 2. output file,
@@ -94,10 +99,10 @@ time_step_size = 40 # milli-sec
 
 [visualisation]
 sea_surface_edge_length = 20.0 #m
+sea_surface_position = [1000.0, 1000.0] # Position of the bottom-left corner of the simulated surface.
 count_mesh_cells_along_edge = 20 # Number of mesh cells along one edge of the sea surface. A larger number means a finer sea surface mesh.
 ```
 
-## Using ASVLite as a software library. 
+## Using ASVLite as a software library
 
-For details of the programming interface provided by ASVLite,
-refer to the Doxygen generated documentation `doc/html/index.html`.
+For details of the programming interface provided by ASVLite, refer to the Doxygen generated documentation `doc/html/index.html`.

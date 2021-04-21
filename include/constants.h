@@ -1,5 +1,5 @@
-/*! \mainpage ASV-Swarm
- * This document describes the API of ASV-Swarm. The annotated and relatively
+/*! \mainpage ASVLite
+ * This document describes the API of ASVLite. The annotated and relatively
  * simple code below demonstrates:
  * <ul>
  * <li> creating an instance of Asv,

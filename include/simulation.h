@@ -2,6 +2,7 @@
 #define SIMULATION_H
 
 #include "asv.h"
+#include "pid_controller.h"
 #include <pthread.h>
 
 /**
@@ -51,6 +52,7 @@ struct Simulation
   char id[32];
   struct Wave* wave;
   struct Asv* asv; 
+  struct PID_controller* pid_controller;
   struct Waypoints* waypoints;
   struct Buffer* buffer;
   // Data related to current time step in the simulation
@@ -128,5 +130,10 @@ double get_sea_surface_edge_length();
  * one edge of the sea surface.
  */
 int get_count_mesh_cells_along_edge();
+
+/**
+ * Visualisation data from input file. Function to get the bottom left corner of the simulated sea surface.
+ */
+struct Dimensions get_sea_surface_position();
 
 #endif // SIMULATION_H
