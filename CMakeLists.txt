@@ -40,6 +40,7 @@ SET( SOURCE
   source/wave.c
   source/asv.c
   source/pid_controller.c
+  source/swarm_controller.c
   source/simulation.c
   source/main.c
   )

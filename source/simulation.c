@@ -37,6 +37,7 @@ struct Simulation* simulation_new_node()
   node->wave = &wave;
   node->asv = (struct Asv*)malloc(sizeof(struct Asv));
   node->pid_controller = (struct PID_controller*)malloc(sizeof(struct PID_controller));
+  node->swarm_controller = (struct Swarm_controller*)malloc(sizeof(struct Swarm_controller));
   node->waypoints = (struct Waypoint*)malloc(sizeof(struct Waypoints));
   node->buffer = (struct Buffer*)malloc(OUTPUT_BUFFER_SIZE * sizeof(struct Buffer));
   // Initialise pointers and index
@@ -56,6 +57,7 @@ void simulation_clean(struct Simulation* first_node)
     free(current_node->waypoints);
     free(current_node->asv);
     free(current_node->pid_controller);
+    free(current_node->swarm_controller);
     free(current_node);
     current_node = next_node;
   }
@@ -780,8 +782,14 @@ void compute_dynamics(void* current_node)
   }
   // Set differential thrust on each propeller.
   // ------------------------------------------
-  // In controller set the way point for the current time step
-  pid_controller_set_way_point(node->pid_controller, node->waypoints->points[node->current_waypoint_index]);
+  // Inform swarm controller of the current state.
+  swarm_controller_set_current_state(node->swarm_controller, node->asv->cog_position);
+  // Inform swarm controller of current waypoint
+  swarm_controller_set_old_way_point(node->swarm_controller, node->waypoints->points[node->current_waypoint_index]);
+  // Swarm controller estimate location of new waypoint
+  swarm_controller_set_new_way_point(node->swarm_controller);
+  // In PID controller set the way point for the current time step
+  pid_controller_set_way_point(node->pid_controller, node->swarm_controller->new_way_point);
   // Inform PID controller of the current state.
   pid_controller_set_current_state(node->pid_controller, node->asv->cog_position, node->asv->attitude);
   // PID controller estimate thrust to be applied on each propeller.
@@ -927,30 +935,30 @@ void send_message_through_pipe(char send_str[], int fd)
   write(fd, send_str, sizeof(char) * send_str_len);
 }
 
-struct message
-{
-  string payload;
-  string to;
-  string from;
-}
+// struct message
+// {
+//   string payload;
+//   string to;
+//   string from;
+// }
 
-void addCreateIfNew(nordered_map<int,vector<message>>& communication_queue, int t, message m)
-{
-  if (communication_queue.count(t) == 0) {
-    communication_queue[t] = vector<message>();
-  }
+// void addCreateIfNew(unordered_map<int,vector<message>>& communication_queue, int t, message m)
+// {
+//   if (communication_queue.count(t) == 0) {
+//     communication_queue[t] = vector<message>();
+//   }
 
-  communication_queue[t].push_back(m);
-}
+//   communication_queue[t].push_back(m);
+// }
 
 void simulation_run_with_visualisation(struct Simulation* first_node)
 {
   int fd = open("/home/akhi/Documents/p3project/ASVLite/renderer_fifo", O_WRONLY);
 
-  int latency = 5;
-  float range = 100;
-  int delay = 20;
-  unordered_map<int,vector<message>> communication_queue;
+  // int latency = 5;
+  // float range = 100;
+  // int delay = 20;
+  // unordered_map<int,vector<message>> communication_queue;
 
   if (mkfifo("../renderer_fifo", 0666) == -1) {
     if (errno != EEXIST) {
@@ -1008,6 +1016,7 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
       send_message_through_pipe(move_str, fd);
     }
 
+    /*
     for (auto message : communication_queue[t]) {
       if (message.payload == "REQUEST") {
         message m = {
@@ -1025,6 +1034,7 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
         addCreateIfNew(communication_queue, t+latency, m);
       }
     }
+    */
 
     // stop if all reached the destination or if buffer exceeded.
     if(has_all_reached_final_waypoint || buffer_exceeded)
