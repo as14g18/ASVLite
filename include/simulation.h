@@ -3,6 +3,7 @@
 
 #include "asv.h"
 #include "pid_controller.h"
+#include "swarm_controller.h"
 #include <pthread.h>
 
 /**
@@ -53,6 +54,7 @@ struct Simulation
   struct Wave* wave;
   struct Asv* asv; 
   struct PID_controller* pid_controller;
+  struct Swarm_controller* swarm_controller;
   struct Waypoints* waypoints;
   struct Buffer* buffer;
   // Data related to current time step in the simulation

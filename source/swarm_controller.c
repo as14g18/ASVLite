@@ -25,4 +25,7 @@ void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
   controller->new_way_point.x = controller->old_way_point.x;
   controller->new_way_point.y = controller->old_way_point.y;
   controller->new_way_point.z = controller->old_way_point.z;
+  // controller->new_way_point.x = 0;
+  // controller->new_way_point.y = -100;
+  // controller->new_way_point.z = 0;
 }

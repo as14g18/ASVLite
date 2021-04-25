@@ -800,6 +800,14 @@ void compute_dynamics(void* current_node)
   node->asv->propellers[2].thrust = node->pid_controller->thrust_aft_ps;  //N
   node->asv->propellers[3].thrust = node->pid_controller->thrust_aft_sb;  //N 
 
+  printf(
+    "THRUST %f %f %f %f ",
+    node->pid_controller->thrust_fore_ps,
+    node->pid_controller->thrust_fore_sb,
+    node->pid_controller->thrust_aft_ps,
+    node->pid_controller->thrust_aft_sb
+  );
+
 
   // Compute the dynamics of asv for the current time step
   asv_compute_dynamics(node->asv, current_time);
@@ -1002,16 +1010,16 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
         node->asv->attitude.y
       );
 
-      printf(
-        "MOVE %d %f %f %f %f %f %f",
-        node->id,
-        node->asv->origin_position.x,
-        node->asv->origin_position.y,
-        node->asv->origin_position.z,
-        node->asv->attitude.z,
-        node->asv->attitude.x,
-        node->asv->attitude.y
-      );
+      // printf(
+      //   "MOVE %d %f %f %f %f %f %f",
+      //   node->id,
+      //   node->asv->origin_position.x,
+      //   node->asv->origin_position.y,
+      //   node->asv->origin_position.z,
+      //   node->asv->attitude.z,
+      //   node->asv->attitude.x,
+      //   node->asv->attitude.y
+      // );
 
       send_message_through_pipe(move_str, fd);
     }
