@@ -800,13 +800,13 @@ void compute_dynamics(void* current_node)
   node->asv->propellers[2].thrust = node->pid_controller->thrust_aft_ps;  //N
   node->asv->propellers[3].thrust = node->pid_controller->thrust_aft_sb;  //N 
 
-  printf(
-    "THRUST %f %f %f %f ",
-    node->pid_controller->thrust_fore_ps,
-    node->pid_controller->thrust_fore_sb,
-    node->pid_controller->thrust_aft_ps,
-    node->pid_controller->thrust_aft_sb
-  );
+  // printf(
+  //   "THRUST %f %f %f %f ",
+  //   node->pid_controller->thrust_fore_ps,
+  //   node->pid_controller->thrust_fore_sb,
+  //   node->pid_controller->thrust_aft_ps,
+  //   node->pid_controller->thrust_aft_sb
+  // );
 
 
   // Compute the dynamics of asv for the current time step
@@ -943,47 +943,30 @@ void send_message_through_pipe(char send_str[], int fd)
   write(fd, send_str, sizeof(char) * send_str_len);
 }
 
-// struct message
-// {
-//   string payload;
-//   string to;
-//   string from;
-// }
-
-// void addCreateIfNew(unordered_map<int,vector<message>>& communication_queue, int t, message m)
-// {
-//   if (communication_queue.count(t) == 0) {
-//     communication_queue[t] = vector<message>();
-//   }
-
-//   communication_queue[t].push_back(m);
-// }
-
-void simulation_run_with_visualisation(struct Simulation* first_node)
+void simulation_run_with_visualisation(struct Simulation* first_node, bool show_visualisation)
 {
-  int fd = open("/home/akhi/Documents/p3project/ASVLite/renderer_fifo", O_WRONLY);
+  int fd;
 
-  // int latency = 5;
-  // float range = 100;
-  // int delay = 20;
-  // unordered_map<int,vector<message>> communication_queue;
+  if (show_visualisation) {
+    fd = open("/home/akhi/Documents/p3project/ASVLite/renderer_fifo", O_WRONLY);
 
-  if (mkfifo("../renderer_fifo", 0666) == -1) {
-    if (errno != EEXIST) {
-      printf("Error creating fifo\n");
-      return 1;
+    if (mkfifo("../renderer_fifo", 0666) == -1) {
+      if (errno != EEXIST) {
+        printf("Error creating fifo\n");
+        return 1;
+      }
     }
-  }
 
-  char bound_str[1024];
-  snprintf(bound_str, sizeof(bound_str), "BOUND 0 300 500 1500 3");
-  send_message_through_pipe(bound_str, fd);
+    char bound_str[1024];
+    snprintf(bound_str, sizeof(bound_str), "BOUND 0 300 500 1500 3");
+    send_message_through_pipe(bound_str, fd);
 
-  for(struct Simulation* node = first_node; node != NULL; node = node->next)
-  {
-    char create_str[1024];
-    snprintf(create_str, sizeof(create_str), "CREATE %d 3 6 3", node->id);
-    send_message_through_pipe(create_str, fd);
+    for(struct Simulation* node = first_node; node != NULL; node = node->next)
+    {
+      char create_str[1024];
+      snprintf(create_str, sizeof(create_str), "CREATE %d 3 6 3", node->id);
+      send_message_through_pipe(create_str, fd);
+    }
   }
 
   bool buffer_exceeded = false;
@@ -994,55 +977,37 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
 
     simulation_for_time_step(first_node, t, &buffer_exceeded, &has_all_reached_final_waypoint);
 
-    for(struct Simulation* node = first_node; node != NULL; node = node->next)
-    {
-      char move_str[1024];
-      snprintf(
-        move_str,
-        sizeof(move_str),
-        "MOVE %d %f %f %f %f %f %f",
-        node->id,
-        node->asv->origin_position.x,
-        node->asv->origin_position.y,
-        node->asv->origin_position.z,
-        node->asv->attitude.z,
-        node->asv->attitude.x,
-        node->asv->attitude.y
-      );
+    if (show_visualisation) {
+      for(struct Simulation* node = first_node; node != NULL; node = node->next)
+      {
+        char move_str[1024];
+        snprintf(
+          move_str,
+          sizeof(move_str),
+          "MOVE %d %f %f %f %f %f %f",
+          node->id,
+          node->asv->origin_position.x,
+          node->asv->origin_position.y,
+          node->asv->origin_position.z,
+          node->asv->attitude.z,
+          node->asv->attitude.x,
+          node->asv->attitude.y
+        );
 
-      // printf(
-      //   "MOVE %d %f %f %f %f %f %f",
-      //   node->id,
-      //   node->asv->origin_position.x,
-      //   node->asv->origin_position.y,
-      //   node->asv->origin_position.z,
-      //   node->asv->attitude.z,
-      //   node->asv->attitude.x,
-      //   node->asv->attitude.y
-      // );
+        // printf(
+        //   "MOVE %d %f %f %f %f %f %f",
+        //   node->id,
+        //   node->asv->origin_position.x,
+        //   node->asv->origin_position.y,
+        //   node->asv->origin_position.z,
+        //   node->asv->attitude.z,
+        //   node->asv->attitude.x,
+        //   node->asv->attitude.y
+        // );
 
-      send_message_through_pipe(move_str, fd);
-    }
-
-    /*
-    for (auto message : communication_queue[t]) {
-      if (message.payload == "REQUEST") {
-        message m = {
-          "INFORMATION",
-          message.from,
-          message.to
-        };
-        addCreateIfNew(communication_queue, t+latency, m)
-      } else if (message.payload == "INFORMATION") {
-        message m = {
-          "ACK",
-          message.from,
-          message.to
-        };
-        addCreateIfNew(communication_queue, t+latency, m);
+        send_message_through_pipe(move_str, fd);
       }
     }
-    */
 
     // stop if all reached the destination or if buffer exceeded.
     if(has_all_reached_final_waypoint || buffer_exceeded)
@@ -1051,7 +1016,7 @@ void simulation_run_with_visualisation(struct Simulation* first_node)
     }
   }
 
-  close(fd);
+  if (show_visualisation) close(fd);
 }
 
 void simulation_run_without_time_sync(struct Simulation* first_node)
