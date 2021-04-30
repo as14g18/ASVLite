@@ -760,7 +760,7 @@ void simulation_write_output(struct Simulation* first_node,
   }
 }
 
-// Computes dynamics for current node for the current time step.
+// Computes dynamics for current node for the current time step with swarm controller
 void compute_dynamics(void* current_node)
 {
   struct Simulation* node = (struct Simulation*)current_node;
@@ -786,6 +786,11 @@ void compute_dynamics(void* current_node)
   swarm_controller_set_current_state(node->swarm_controller, node->asv->cog_position);
   // Inform swarm controller of current waypoint
   swarm_controller_set_old_way_point(node->swarm_controller, node->waypoints->points[node->current_waypoint_index]);
+  // Inform controller of state of other ASVs
+  swarm_controller_set_asv_states(node->swarm_controller, node);
+  // Set latency in swarm controller and increment latency counter
+  swarm_controller_set_latency(node->swarm_controller, 10);
+  swarm_controller_increment_latency_counter(node->swarm_controller);
   // Swarm controller estimate location of new waypoint
   swarm_controller_set_new_way_point(node->swarm_controller);
   // In PID controller set the way point for the current time step
