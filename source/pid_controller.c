@@ -52,6 +52,7 @@ void pid_controller_set_way_point(struct PID_controller* controller,
 
 void pid_controller_set_thrust(struct PID_controller* controller)
 {
+  // printf("x: %f | y: %f | wx: %f | wy: %f\n", controller->asv_position.x, controller->asv_position.y, controller->way_point.x, controller->way_point.y);
   // Calculate the heading required in radian.
   double x1 = controller->asv_position.x;
   double y1 = controller->asv_position.y;

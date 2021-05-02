@@ -76,53 +76,36 @@ void swarm_controller_moderate_speed(struct Swarm_controller* controller)
 
 void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 {
-	double corridor_distance = 2;
+	double corridor_distance = 5;
 	double difference = controller->asv_position.x - controller->old_way_point.x;
-	double waypoint_x;
-	if (controller->asv_position.x > controller->old_way_point.x + corridor_distance ||
-		controller->asv_position.x < controller->old_way_point.x - corridor_distance) {
-		if (abs(difference) < 5) {
-			if (difference < 0) {
-				difference = -5;
-			} else {
-				difference = 5;
-			}
-		}
-		else if (abs(difference) < 10) {
-			if (difference < 0) {
-				difference = -10;
-			} else {
-				difference = 10;
-			}
+	double multiplier = difference < 0 ? -1 : 1;
+	double waypoint_x = controller->old_way_point.x;
+	if (abs(difference) > corridor_distance) {
+		if (abs(difference) < 10) {
+			difference = 10 * multiplier;
 		}
 		else if (abs(difference) < 15) {
-			if (difference < 0) {
-				difference = -15;
-			} else {
-				difference = 15;
-			}
+			difference = 15 * multiplier;
 		}
 		else if (abs(difference) < 20) {
-			if (difference < 0) {
-				difference = -20;
-			} else {
-				difference = 20;
-			}
+			difference = 20 * multiplier;
+		}
+		else if (abs(difference) < 25) {
+			difference = 25 * multiplier;
 		}
 		else {
-			if (difference < 0) {
-				difference = -25;
-			} else {
-				difference = 25;
-			}
+			difference = 30 * multiplier;
 		}
 
 		waypoint_x = controller->old_way_point.x - difference;
+		
+		// if (controller->old_way_point.x == 1020  && controller->asv_position.y < 2000)
+		// printf("old: %f | new: %f | x: %f | y: %f\n", controller->old_way_point.x, waypoint_x, controller->asv_position.x, controller->asv_position.y);
 	}
 
 	double waypoint_y = controller->asv_position.y + (controller->buffer_speed / 100) * (controller->old_way_point.y - controller->asv_position.y);
 
 	controller->new_way_point.x = waypoint_x;
-	controller->new_way_point.y = waypoint_y;
+	controller->new_way_point.y = controller->old_way_point.y;
 	controller->new_way_point.z = controller->old_way_point.z;
 }
