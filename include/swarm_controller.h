@@ -14,7 +14,6 @@ struct Swarm_controller
   struct Dimensions old_way_point;
   struct Dimensions new_way_point;
   double buffer_speed;
-  double calculated_speed;
 
   struct Simulation* node; // Contains data for other ASVs
 
@@ -22,6 +21,7 @@ struct Swarm_controller
   int latency; // Actual latency
 };
 
+void swarm_controller_init(struct Swarm_controller* controller);
 
 void swarm_controller_set_current_state(struct Swarm_controller* controller,
                                       struct Dimensions position);

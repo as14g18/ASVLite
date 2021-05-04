@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <math.h>
 
+void swarm_controller_init(struct Swarm_controller* controller)
+{
+  controller->buffer_speed = 100;
+}
+
 void swarm_controller_set_current_state(struct Swarm_controller* controller,
                                       struct Dimensions position)
 {
@@ -35,7 +40,7 @@ void swarm_controller_set_latency(struct Swarm_controller* controller, int laten
 void swarm_controller_moderate_speed(struct Swarm_controller* controller)
 {
 	double y_sum = 0;
-	int counter = 0;
+	double counter = 0;
 	for (struct Simulation* curnode = controller->node->previous; curnode != NULL; curnode = curnode->previous) {
 		y_sum += curnode->asv->cog_position.y;
 		counter++;
@@ -47,65 +52,41 @@ void swarm_controller_moderate_speed(struct Swarm_controller* controller)
 	}
 
 	double average_y = y_sum / counter;
-	double diff = controller->node->asv->cog_position.y / average_y;
-	double speed = 100;
-
-	if (diff > 1) {
-		if (diff < 1.25) {
-			speed = 75;
-		}
-		else if (diff < 1.5) {
-			speed = 50;
-		}
-		else if (diff < 1.75) {
-			speed = 25;
-		}
-		else {
-			speed = 0;
-		}
-	}
-
-	controller->calculated_speed = speed;
+	double diff = controller->asv_position.y - average_y;
+	// if (diff > 2 && (controller->old_way_point.x == 1005 || controller->old_way_point.x == 2005))
+	// printf("diff: %f | y: %f\n", diff, controller->asv_position.y);
+	double speed = diff > 2 ? 0 : 100;
 
 	controller->latency_counter = controller->latency_counter + 1;
 	if (controller->latency_counter == controller->latency) {
 		controller->latency_counter = 0;
-		controller->buffer_speed = controller->calculated_speed;
+		controller->buffer_speed = speed;
+		// if (speed == 0 && controller->old_way_point.x == 1015) printf("BRUH %f\n", controller->asv_position.y);
 	}
 }
 
 void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 {
-	double corridor_distance = 5;
+	double corridor_distance = 1;
 	double difference = controller->asv_position.x - controller->old_way_point.x;
 	double multiplier = difference < 0 ? -1 : 1;
 	double waypoint_x = controller->old_way_point.x;
+	double correction_speed = 100;
 	if (abs(difference) > corridor_distance) {
-		if (abs(difference) < 10) {
-			difference = 10 * multiplier;
-		}
-		else if (abs(difference) < 15) {
-			difference = 15 * multiplier;
-		}
-		else if (abs(difference) < 20) {
-			difference = 20 * multiplier;
-		}
-		else if (abs(difference) < 25) {
-			difference = 25 * multiplier;
-		}
-		else {
-			difference = 30 * multiplier;
-		}
+		difference = 1000 * multiplier;
+		controller->buffer_speed = 2;
 
 		waypoint_x = controller->old_way_point.x - difference;
 		
-		// if (controller->old_way_point.x == 1020  && controller->asv_position.y < 2000)
+		// if (controller->old_way_point.x == 1005  && controller->asv_position.y < 3000)
 		// printf("old: %f | new: %f | x: %f | y: %f\n", controller->old_way_point.x, waypoint_x, controller->asv_position.x, controller->asv_position.y);
 	}
 
-	double waypoint_y = controller->asv_position.y + (controller->buffer_speed / 100) * (controller->old_way_point.y - controller->asv_position.y);
-
+	double waypoint_y = controller->asv_position.y + (correction_speed / 100) * (controller->buffer_speed / 100) * (controller->old_way_point.y - controller->asv_position.y);
+	// if (waypoint_y < 2000) printf("BRUH");
+	// if (controller->old_way_point.x == 1005)
+	// printf("ay: %f | b: %f | owy: %f | nwy: %f\n", controller->asv_position.y, controller->buffer_speed, controller->old_way_point.y, waypoint_y);
 	controller->new_way_point.x = waypoint_x;
-	controller->new_way_point.y = controller->old_way_point.y;
+	controller->new_way_point.y = waypoint_y;
 	controller->new_way_point.z = controller->old_way_point.z;
 }

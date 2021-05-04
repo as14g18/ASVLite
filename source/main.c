@@ -42,9 +42,9 @@ int main(int argc, char** argv)
   // #elif ENABLE_TIME_SYNC
   // simulation_run(simulation);
   // #else
-  // simulation_run_without_time_sync(simulation);
+  simulation_run_without_time_sync(simulation);
   // #endif
-  simulation_run_with_visualisation(simulation, false);
+  // simulation_run_with_visualisation(simulation, false);
   clock_gettime(CLOCK_MONOTONIC, &finish);
   elapsed = (finish.tv_sec - start.tv_sec);
   elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
