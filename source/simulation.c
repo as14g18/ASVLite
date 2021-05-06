@@ -655,7 +655,7 @@ void simulation_set_input(struct Simulation* first_node,
     swarm_controller_init(node->swarm_controller);
     // PID controller set gain terms
     double p_position = 1.0   * node->asv->dynamics.time_step_size;
-    double i_position = 0.05   * node->asv->dynamics.time_step_size;
+    double i_position = 0.1   * node->asv->dynamics.time_step_size;
     double d_position = -10.0 * node->asv->dynamics.time_step_size;
     pid_controller_set_gains_position(node->pid_controller, p_position, i_position, d_position);
     double p_heading = 1.0   * node->asv->dynamics.time_step_size;
