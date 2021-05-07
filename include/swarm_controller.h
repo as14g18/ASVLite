@@ -11,6 +11,7 @@ struct Swarm_controller
   struct Dimensions asv_position; // Current position of the ASV in the X-Y 
                              // coordinate space. struct Point is for 3D 
                              // coordinate space, ignore z and set it to 0.0m.
+  struct Dimensions origin_position;
   struct Dimensions old_way_point;
   struct Dimensions new_way_point;
   double buffer_speed;
@@ -33,6 +34,9 @@ void swarm_controller_set_current_state(struct Swarm_controller* controller,
  */
 void swarm_controller_set_old_way_point(struct Swarm_controller* controller,
                                   struct Dimensions way_point);
+
+void swarm_controller_set_origin_position(struct Swarm_controller* controller,
+									  struct Dimensions origin_position);
 
 void swarm_controller_set_asv_states(struct Swarm_controller* controller, struct Simulation* node);
 
