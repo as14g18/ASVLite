@@ -788,7 +788,7 @@ void compute_dynamics(void* current_node)
   // Inform swarm controller of current waypoint
   swarm_controller_set_old_way_point(node->swarm_controller, node->waypoints->points[node->current_waypoint_index]);
   // Inform swarm controller of origin position
-  swarm_controller_set_origin_position(node->swarm_controller, node->asv->origin_position);
+  swarm_controller_set_first_waypoint(node->swarm_controller, node->waypoints->points[0]);
   // Inform swarm controller of state of other ASVs
   swarm_controller_set_asv_states(node->swarm_controller, node);
   // Inform swarm controller of the communication latency

@@ -171,9 +171,9 @@ def show_animated_plot(data):
 
 	plt.draw()
 
-	bruh = 300
+	skip = 300
 	for column in df:
-		bruh -= 1
+		skip -= 1
 		if bruh == 0:
 			bruh = 300
 		else:
