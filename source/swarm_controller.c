@@ -66,53 +66,67 @@ bool equal_dimensions(struct Dimensions d1, struct Dimensions d2)
 	return d1.x == d2.x && d1.y == d2.y;
 }
 
+double calculate_slope(struct Dimensions d1, struct Dimensions d2)
+{
+	if (d2.x == d1.x) return DBL_MAX;
+	return (d2.y - d1.y) / (d2.x - d1.x);
+}
+
 double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 {	
-	// if (controller->node->previous != NULL)
-	// printf("%f\n",controller->node->previous->waypoints->points[0].x);
-	// printf("%f\n",controller->node->waypoints->points[0].x);
-	// if (controller->node->next != NULL)
-	// printf("%f\n",controller->node->next->waypoints->points[0].x);
-	// printf("-----\n");
-
-	// double total_distance = 0;
-	// int count = 0;
-	// for (struct Simulation* curnode = controller->node; curnode != NULL; curnode = curnode->previous) {
-	// 	if (curnode->previous == NULL) {
-	// 		for (struct Simulation* curnode2 = curnode; curnode2 != NULL; curnode2 = curnode2->next) {
-	// 			if (fabs(curnode->waypoints->points[0].x - controller->first_waypoint.x) == 500) {
-	// 				printf("%f | %f\n", curnode->waypoints->points[0].x, controller->node->waypoints->points[0].x);
-	// 				double distance = calculate_distance(
-	// 					curnode->asv->cog_position,
-	// 					curnode->waypoints->points[sizeof(curnode->waypoints->points)/sizeof(curnode->waypoints->points[0]) - 1]
-	// 				);
-
-	// 				total_distance += distance;
-	// 				count += 1;
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	// if (count > 2) printf("ERROR: COUNT MORE THAN 2\n");
-
-	double total_distance = 0;
-	double count = 0;
+	struct Dimensions prevpoint;
+	struct Dimensions nextpoint;
 	if (controller->node->previous != NULL) {
-		total_distance += calculate_distance(
-			controller->node->previous->asv->cog_position,
-			controller->node->previous->waypoints->points[1]
-		);
-		count++;
+		prevpoint.x = controller->node->previous->asv->cog_position.x;
+		prevpoint.y = controller->node->previous->asv->cog_position.y;
+		prevpoint.z = controller->node->previous->asv->cog_position.z;
+	} else {
+		prevpoint.x = controller->node->next->next->asv->cog_position.x;
+		prevpoint.y = controller->node->next->next->asv->cog_position.y;
+		prevpoint.z = controller->node->next->next->asv->cog_position.z;
 	}
 
 	if (controller->node->next != NULL) {
-		total_distance += calculate_distance(
-			controller->node->next->asv->cog_position,
-			controller->node->next->waypoints->points[1]
-		);
-		count++;
+		nextpoint.x = controller->node->next->asv->cog_position.x;
+		nextpoint.y = controller->node->next->asv->cog_position.y;
+		nextpoint.z = controller->node->next->asv->cog_position.z;
+	} else {
+		nextpoint.x = controller->node->previous->previous->asv->cog_position.x;
+		nextpoint.y = controller->node->previous->previous->asv->cog_position.y;
+		nextpoint.z = controller->node->previous->previous->asv->cog_position.z;
 	}
+
+	double asv_slope = calculate_slope(prevpoint, nextpoint);
+	double angle = M_PI - fabs(atan(asv_slope) - (M_PI / 2));
+	double neg_angle = M_PI - angle;
+
+	if (asv_slope > 0) {
+		if (angle > 90) {
+			angle *= -1;
+		} else {
+			neg_angle *= -1;
+		}
+	} else {
+		if (angle < 90) {
+			angle *= -1;
+		} else {
+			neg_angle *= -1;
+		}
+	}
+
+	if (angle < 0) {
+		double temp = neg_angle;
+		neg_angle = angle;
+		angle = temp;
+	}
+
+	double speed = 0.1;
+	if (controller->asv_attitude.z > neg_angle && controller->asv_attitude.z < angle) {
+		speed = 1;
+	}
+
+	if (controller->node->waypoints->points[0].x == 1000) printf("%f | %f | %f | %f\n", angle, neg_angle, controller->asv_attitude.z, speed);
+
 
 	// double average_distance = total_distance / count;
 	// double current_distance = calculate_distance(
@@ -138,6 +152,7 @@ double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 
 	// double speed = current_distance / average_distance;
 	// if (controller->node->waypoints->points[0].x == 1000)
+	// 	printf("%f\n", speed);
 	// 	printf("%f\n", controller->asv_attitude.z);
 	// printf("s: %f | ad: %f | cd: %f | td: %f | c: %f | %f | %f\n", speed, average_distance, current_distance, total_distance, count, controller->asv_position.x, controller->asv_position.y);
 
