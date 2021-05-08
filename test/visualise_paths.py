@@ -29,8 +29,6 @@ DIRECTORIES = [
 
 START_Y = 1000
 GOAL_Y = 3000
-# GOAL_X = (1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000)
-GOAL_X = (1000, 1005, 1010, 1015, 1020)
 X_CORRIDOR_THRESHOLD = 3
 ASV_COUNT = 5
 
@@ -78,8 +76,12 @@ def calculate_vertical_rss(df, column):
 
 	return rss
 
+average_dist = 0
+count_dist = 0
 
 def calculate_distance_sd(df, column):
+	global average_dist
+	global count_dist
 	coords = []
 	for i in range(ASV_COUNT):
 		cur_x = df[column][f'asv{i}_x']
@@ -91,7 +93,9 @@ def calculate_distance_sd(df, column):
 	for i in range(1, len(coords)):
 		dist = np.linalg.norm(coords[i]-coords[i-1])
 		distances.append(dist)
-
+		average_dist += abs(500 - dist)
+		count_dist += 1
+	print(distances)
 	sd = np.std(distances) if distances else None
 
 	return sd if sd else None
@@ -134,7 +138,7 @@ def calculate_performance(data):
 	return (V / (G + C)) * 100
 
 
-def generate_dataframe(directory):
+def generate_dataframe(directory, drop_y=False):
 	filenames = []
 	for filename in os.listdir(directory):
 		filenames.append(filename)
@@ -149,10 +153,11 @@ def generate_dataframe(directory):
 		df = pd.read_csv(os.path.join(directory, filename), delim_whitespace=True)
 		df = df[df['sig_wave_ht(m)'] != 0]
 
-		# Remove all entries that go beyond the waypoint y
-		cols = ['cog_y(m)']
-		df[cols] = df[df[cols] <= GOAL_Y][cols]
-		df.dropna()
+		if drop_y:
+			# Remove all entries that go beyond the waypoint y
+			cols = ['cog_y(m)']
+			df[cols] = df[df[cols] <= GOAL_Y][cols]
+			df.dropna()
 
 		for index, row in df.iterrows():
 			data[row['time(sec)']][f'asv{i}_x'] = row['cog_x(m)']
@@ -174,8 +179,8 @@ def show_animated_plot(data):
 	skip = 300
 	for column in df:
 		skip -= 1
-		if bruh == 0:
-			bruh = 300
+		if skip == 0:
+			skip = 300
 		else:
 			continue
 		for i in range(ASV_COUNT):
@@ -227,8 +232,9 @@ if __name__ == "__main__":
 	directory = f'/home/akhi/Documents/p3project/ASVLite/build/run-{WAVE_HEIGHT}-{HEADING}-1'
 
 	# print(f'Swarm Performance: {calculate_performance(generate_dataframe(directory))}')
-	# show_animated_plot(generate_dataframe(directory))
-	show_plot(directory)
+	# print(average_dist / count_dist)
+	show_animated_plot(generate_dataframe(directory))
+	# show_plot(directory)
 
 	# count = 0
 	# total = 0

@@ -787,27 +787,29 @@ void compute_dynamics(void* current_node)
   swarm_controller_set_current_state(node->swarm_controller, node->asv->cog_position);
   // Inform swarm controller of current waypoint
   swarm_controller_set_old_way_point(node->swarm_controller, node->waypoints->points[node->current_waypoint_index]);
-  // Inform swarm controller of origin position
+  // Inform swarm controller of first waypoint
   swarm_controller_set_first_waypoint(node->swarm_controller, node->waypoints->points[0]);
   // Inform swarm controller of state of other ASVs
   swarm_controller_set_asv_states(node->swarm_controller, node);
   // Inform swarm controller of the communication latency
   swarm_controller_set_latency(node->swarm_controller, 10);
   // Moderate ASV speed by modifying y value of way point
-  swarm_controller_moderate_speed(node->swarm_controller);
+  double speed = swarm_controller_moderate_speed(node->swarm_controller);
   // Swarm controller estimate location of new waypoint
   swarm_controller_set_new_way_point(node->swarm_controller);
   // In PID controller set the way point for the current time step
   pid_controller_set_way_point(node->pid_controller, node->swarm_controller->new_way_point);
   // Inform PID controller of the current state.
   pid_controller_set_current_state(node->pid_controller, node->asv->cog_position, node->asv->attitude);
+  // Set speed modifier of ASV from swarm controller
+  pid_controller_set_speed(node->pid_controller, speed);
   // PID controller estimate thrust to be applied on each propeller.
   pid_controller_set_thrust(node->pid_controller);
   // Set propeller thrust on each of the 4 propellers
   node->asv->propellers[0].thrust = node->pid_controller->thrust_fore_ps; //N
   node->asv->propellers[1].thrust = node->pid_controller->thrust_fore_sb; //N
   node->asv->propellers[2].thrust = node->pid_controller->thrust_aft_ps;  //N
-  node->asv->propellers[3].thrust = node->pid_controller->thrust_aft_sb;  //N 
+  node->asv->propellers[3].thrust = node->pid_controller->thrust_aft_sb;  //N
 
   // printf(
   //   "THRUST %f %f %f %f ",

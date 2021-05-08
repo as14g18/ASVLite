@@ -42,7 +42,7 @@ void swarm_controller_set_asv_states(struct Swarm_controller* controller, struct
 
 void swarm_controller_set_latency(struct Swarm_controller* controller, int latency);
 
-void swarm_controller_moderate_speed(struct Swarm_controller* controller);
+double swarm_controller_moderate_speed(struct Swarm_controller* controller);
 
 void swarm_controller_set_new_way_point(struct Swarm_controller* controller);
 

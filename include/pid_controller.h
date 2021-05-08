@@ -35,6 +35,7 @@ struct PID_controller
   double error_position;
   double error_int_position;
   double error_diff_position;
+  double speed;
 };
 
 /**
@@ -64,6 +65,9 @@ void pid_controller_set_gains_heading(struct PID_controller* controller,
 void pid_controller_set_current_state(struct PID_controller* controller,
                                       struct Dimensions position,
                                       struct Dimensions attitude);
+
+void pid_controller_set_speed(struct PID_controller* controller,
+                              double speed);
 
 /**
  * Function to set the destination point for the ASV.

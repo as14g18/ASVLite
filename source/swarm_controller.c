@@ -62,40 +62,87 @@ bool equal_dimensions(struct Dimensions d1, struct Dimensions d2)
 	return d1.x == d2.x && d1.y == d2.y;
 }
 
-void swarm_controller_moderate_speed(struct Swarm_controller* controller)
+double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 {
-	// double y_sum = 0;
-	// double counter = 0;
-	// for (struct Simulation* curnode = controller->node->previous; curnode != NULL; curnode = curnode->previous) {
-	// 	y_sum += curnode->asv->cog_position.y;
-	// 	counter++;
+
+		
+	// if (controller->node->previous != NULL)
+	// printf("%f\n",controller->node->previous->waypoints->points[0].x);
+	// printf("%f\n",controller->node->waypoints->points[0].x);
+	// if (controller->node->next != NULL)
+	// printf("%f\n",controller->node->next->waypoints->points[0].x);
+	// printf("-----\n");
+
+	// double total_distance = 0;
+	// int count = 0;
+	// for (struct Simulation* curnode = controller->node; curnode != NULL; curnode = curnode->previous) {
+	// 	if (curnode->previous == NULL) {
+	// 		for (struct Simulation* curnode2 = curnode; curnode2 != NULL; curnode2 = curnode2->next) {
+	// 			if (fabs(curnode->waypoints->points[0].x - controller->first_waypoint.x) == 500) {
+	// 				printf("%f | %f\n", curnode->waypoints->points[0].x, controller->node->waypoints->points[0].x);
+	// 				double distance = calculate_distance(
+	// 					curnode->asv->cog_position,
+	// 					curnode->waypoints->points[sizeof(curnode->waypoints->points)/sizeof(curnode->waypoints->points[0]) - 1]
+	// 				);
+
+	// 				total_distance += distance;
+	// 				count += 1;
+	// 			}
+	// 		}
+	// 	}
 	// }
 
-	// for (struct Simulation* curnode = controller->node->next; curnode != NULL; curnode = curnode->next) {
-	// 	y_sum += curnode->asv->cog_position.y;
-	// 	counter++;
-	// }
+	// if (count > 2) printf("ERROR: COUNT MORE THAN 2\n");
 
-	// double average_y = y_sum / counter;
-	// double diff = controller->asv_position.y - average_y;
-	// // if (diff > 2 && (controller->old_way_point.x == 1010 || controller->old_way_point.x == 2010))
-	// // printf("diff: %f | y: %f\n", diff, controller->asv_position.y);
-	// double speed = diff > 2 ? 0 : 100;
+	double total_distance = 0;
+	double count = 0;
+	if (controller->node->previous != NULL) {
+		total_distance += calculate_distance(
+			controller->node->previous->asv->cog_position,
+			controller->node->previous->waypoints->points[1]
+		);
+		count++;
+	}
 
-	// // if (controller->latency_counter > 1)
-	// // printf("lc: %d\n", controller->latency_counter);
-	// controller->latency_counter = controller->latency_counter + 1;
-	// if (controller->latency_counter == controller->latency) {
-	// 	controller->latency_counter = 0;
-	// 	controller->buffer_speed = speed;
-	// 	// if (speed == 0 && (controller->old_way_point.x == 1010 || controller->old_way_point.x == 2010)) printf("BRUH %f\n", controller->asv_position.y);
-	// }
+	if (controller->node->next != NULL) {
+		total_distance += calculate_distance(
+			controller->node->next->asv->cog_position,
+			controller->node->next->waypoints->points[1]
+		);
+		count++;
+	}
+
+	double average_distance = total_distance / count;
+	double current_distance = calculate_distance(
+		controller->asv_position,
+		controller->node->waypoints->points[1]
+	);
+
+	double speed_diff = average_distance - current_distance;
+	double speed;
+	if (speed_diff > 100) {
+		speed = 0.05;
+	} else if (speed_diff > 80) {
+		speed = 0.1;
+	} else if (speed_diff > 60) {
+		speed = 0.12;
+	} else if (speed_diff > 40) {
+		speed = 0.14;
+	} else if (speed_diff > 20) {
+		speed = 0.16;
+	} else {
+		speed = 1;
+	}
+
+	// double speed = current_distance / average_distance;
+	// if (controller->node->waypoints->points[0].x == 3000)
+	// printf("s: %f | ad: %f | cd: %f | td: %f | c: %f | %f | %f\n", speed, average_distance, current_distance, total_distance, count, controller->asv_position.x, controller->asv_position.y);
+
+	return speed;
 }
 
 void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 {
-
-
 	// Find the closest ASV to the current ASV
 	double lowest_distance = DBL_MAX;
 	struct Dimensions closest_cog_position;
@@ -118,14 +165,11 @@ void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 		}
 	}
 
-	// printf("%d | %d\n", current_index, bruh);
-
 	double waypoint_x = controller->old_way_point.x;
 	double waypoint_y = controller->old_way_point.y;
-	// if (controller->old_way_point.x == 3000 || controller->old_way_point.y == 2000) {
 	double distance_threshold = 500;
 	if (calculate_distance(controller->asv_position, closest_cog_position) < distance_threshold) {
-		double rad_offset = 0.523598776;
+		double rad_offset = 0.323598776;
 		double angle = calculate_angle(controller->asv_position, closest_cog_position, controller->old_way_point);
 		if (angle > 0) rad_offset *= -1;
 
@@ -141,17 +185,14 @@ void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 		// printf("a: %f | rf: %f | radius: %f | wx: %f | wy: %f| c: %f\n", angle, rad_offset, radius, waypoint_x, waypoint_y, calculate_distance(controller->asv_position, closest_cog_position));
 	}
 
-	// if (controller->old_way_point.x == 1005  && controller->asv_position.y < 3000)
-	// printf("old: %f | new: %f | x: %f | y: %f\n", controller->old_way_point.x, waypoint_x, controller->asv_position.x, controller->asv_position.y);
+	if (controller->buffer_speed = 0) {
+		waypoint_x = controller->asv_position.x;
+		waypoint_y = controller->asv_position.y;
+	}
 
-	// double waypoint_y = controllerontroller->asv_position.y + (controller->buffer_speed / 100) * (controller->old_way_point.y - controller->asv_position.y) + 1;
-	// if (waypoint_y < 2000) printf("BRUH");
-	// if (controller->old_way_point.x == 1005)
-	// printf("ay: %f | b: %f | owy: %f | nwy: %f\n", controller->asv_position.y, controller->buffer_speed, controller->old_way_point.y, waypoint_y);
 	// controller->new_way_point.x = waypoint_x;
 	// controller->new_way_point.y = waypoint_y;
 	controller->new_way_point.x = waypoint_x;
 	controller->new_way_point.y = waypoint_y;
 	controller->new_way_point.z = controller->old_way_point.z;
-	// printf("x: %f | y: %f", waypoint_x, waypoint_y);
 }
