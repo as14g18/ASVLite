@@ -13,11 +13,15 @@ void swarm_controller_init(struct Swarm_controller* controller)
 }
 
 void swarm_controller_set_current_state(struct Swarm_controller* controller,
-                                      struct Dimensions position)
+                                      struct Dimensions position,
+                                      struct Dimensions attitude)
 {
   controller->asv_position.x = position.x;
   controller->asv_position.y = position.y;
   controller->asv_position.z = position.z;
+  controller->asv_attitude.x = attitude.x;
+  controller->asv_attitude.y = attitude.y;
+  controller->asv_attitude.z = attitude.z;
 }
 
 void swarm_controller_set_old_way_point(struct Swarm_controller* controller,
@@ -63,9 +67,7 @@ bool equal_dimensions(struct Dimensions d1, struct Dimensions d2)
 }
 
 double swarm_controller_moderate_speed(struct Swarm_controller* controller)
-{
-
-		
+{	
 	// if (controller->node->previous != NULL)
 	// printf("%f\n",controller->node->previous->waypoints->points[0].x);
 	// printf("%f\n",controller->node->waypoints->points[0].x);
@@ -112,30 +114,31 @@ double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 		count++;
 	}
 
-	double average_distance = total_distance / count;
-	double current_distance = calculate_distance(
-		controller->asv_position,
-		controller->node->waypoints->points[1]
-	);
+	// double average_distance = total_distance / count;
+	// double current_distance = calculate_distance(
+	// 	controller->asv_position,
+	// 	controller->node->waypoints->points[1]
+	// );
 
-	double speed_diff = average_distance - current_distance;
-	double speed;
-	if (speed_diff > 100) {
-		speed = 0.05;
-	} else if (speed_diff > 80) {
-		speed = 0.1;
-	} else if (speed_diff > 60) {
-		speed = 0.12;
-	} else if (speed_diff > 40) {
-		speed = 0.14;
-	} else if (speed_diff > 20) {
-		speed = 0.16;
-	} else {
-		speed = 1;
-	}
+	// double speed_diff = average_distance - current_distance;
+	// double speed;
+	// if (speed_diff > 100) {
+	// 	speed = 0.1;
+	// } else if (speed_diff > 80) {
+	// 	speed = 0.15;
+	// } else if (speed_diff > 60) {
+	// 	speed = 0.2;
+	// } else if (speed_diff > 40) {
+	// 	speed = 0.25;
+	// } else if (speed_diff > 20) {
+	// 	speed = 0.3;
+	// } else {
+	// 	speed = 1;
+	// }
 
 	// double speed = current_distance / average_distance;
-	// if (controller->node->waypoints->points[0].x == 3000)
+	// if (controller->node->waypoints->points[0].x == 1000)
+	// 	printf("%f\n", controller->asv_attitude.z);
 	// printf("s: %f | ad: %f | cd: %f | td: %f | c: %f | %f | %f\n", speed, average_distance, current_distance, total_distance, count, controller->asv_position.x, controller->asv_position.y);
 
 	return speed;
@@ -169,7 +172,7 @@ void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 	double waypoint_y = controller->old_way_point.y;
 	double distance_threshold = 500;
 	if (calculate_distance(controller->asv_position, closest_cog_position) < distance_threshold) {
-		double rad_offset = 0.323598776;
+		double rad_offset = 0.123598776;
 		double angle = calculate_angle(controller->asv_position, closest_cog_position, controller->old_way_point);
 		if (angle > 0) rad_offset *= -1;
 

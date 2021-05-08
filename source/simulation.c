@@ -784,7 +784,7 @@ void compute_dynamics(void* current_node)
   // Set differential thrust on each propeller.
   // ------------------------------------------
   // Inform swarm controller of the current state.
-  swarm_controller_set_current_state(node->swarm_controller, node->asv->cog_position);
+  swarm_controller_set_current_state(node->swarm_controller, node->asv->cog_position, node->asv->attitude);
   // Inform swarm controller of current waypoint
   swarm_controller_set_old_way_point(node->swarm_controller, node->waypoints->points[node->current_waypoint_index]);
   // Inform swarm controller of first waypoint
