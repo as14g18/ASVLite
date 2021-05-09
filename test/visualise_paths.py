@@ -36,28 +36,25 @@ X_CORRIDOR_THRESHOLD = 3
 ASV_COUNT = 5
 
 
-def calculate_average_speed(df, column, prev_column):
-	total_speed = 0
-	count = 0
+def calculate_max_speed(df, column, prev_column):
+	max_speed = 0
 	if not prev_column:
-		average_speed = 0
+		max_speed = 0
 	else:
 		for i in range(ASV_COUNT):
+			cur_x = df[column][f'asv{i}_x']
 			cur_y = df[column][f'asv{i}_y']
 
 			if not pd.isnull(cur_y):
 				cur_time = float(column)
+				prev_x = df[prev_column][f'asv{i}_x']
 				prev_y = df[prev_column][f'asv{i}_y']
 				prev_time = float(prev_column)
 
-				speed = (cur_y - prev_y) / (cur_time - prev_time)
-				total_speed += speed
+				speed = sqrt((cur_x - prev_x)**2 + (cur_y - prev_y)**2) / (cur_time - prev_time)
+				max_speed = max(max_speed, speed)
 
-				count += 1
-
-		average_speed = None if count == 0 else total_speed / count
-
-	return average_speed
+	return max_speed
 
 history = {}
 def calculate_vertical_r2(df, column):
@@ -81,11 +78,11 @@ def calculate_vertical_r2(df, column):
 	if x.size > 0:
 		b, m = polyfit(x, y, 1)
 		pred_y = b + m * x
-		rss = r2_score(y, pred_y)
+		r2 = r2_score(y, pred_y)
 	else:
-		rss = None
+		r2 = None
 
-	return rss
+	return r2
 
 
 def calculate_distance_sd(df, column):
@@ -118,7 +115,7 @@ def calculate_performance(data):
 	ccount = 0
 
 	for column in df:
-		v = calculate_average_speed(df, column, prev_column)
+		v = calculate_max_speed(df, column, prev_column)
 		g = calculate_vertical_r2(df, column)
 		c = calculate_distance_sd(df, column)
 
@@ -138,7 +135,7 @@ def calculate_performance(data):
 	G /= gcount
 	C /= ccount
 
-	print(f'V: {round(V, 2)} | G: {round(G, 2)} | C: {round(C, 2)}')
+	print(f'V: {round(V, 2)} | C: {round(C, 2)} | G: {round(G, 2)}')
 
 	return round((V * 100 / C) * G, 2)
 
