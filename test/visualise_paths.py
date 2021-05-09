@@ -181,11 +181,12 @@ def show_animated_plot(data):
 
 	plt.draw()
 
-	skip = 300
+	S = 150
+	skip = S
 	for column in df:
 		skip -= 1
 		if skip == 0:
-			skip = 300
+			skip = S
 		else:
 			continue
 		for i in range(ASV_COUNT):
@@ -237,8 +238,8 @@ if __name__ == "__main__":
 	directory = f'/home/akhi/Documents/p3project/ASVLite/build/run-{WAVE_HEIGHT}-{HEADING}-1'
 
 	# print(f'Swarm Performance: {calculate_performance(generate_dataframe(directory))}'); print(average_dist / count_dist)
-	show_animated_plot(generate_dataframe(directory))
-	# show_plot(directory)
+	# show_animated_plot(generate_dataframe(directory))
+	show_plot(directory)
 
 	# count = 0
 	# total = 0

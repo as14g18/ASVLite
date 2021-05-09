@@ -72,90 +72,48 @@ double calculate_slope(struct Dimensions d1, struct Dimensions d2)
 	return (d2.y - d1.y) / (d2.x - d1.x);
 }
 
+struct Dimensions rotate(struct Dimensions d, double angle)
+{
+	struct Dimensions w;
+	w.x = d.x * cos(angle) + d.y * sin(angle);
+	w.y = -d.x * sin(angle) + d.y * cos(angle);
+	w.z = 0;
+
+    return w;
+}
+
 double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 {	
-	struct Dimensions prevpoint;
-	struct Dimensions nextpoint;
+	double max_distance = DBL_MAX;
+	int lowest_waypoint_index = 1;
 	if (controller->node->previous != NULL) {
-		prevpoint.x = controller->node->previous->asv->cog_position.x;
-		prevpoint.y = controller->node->previous->asv->cog_position.y;
-		prevpoint.z = controller->node->previous->asv->cog_position.z;
-	} else {
-		prevpoint.x = controller->node->next->next->asv->cog_position.x;
-		prevpoint.y = controller->node->next->next->asv->cog_position.y;
-		prevpoint.z = controller->node->next->next->asv->cog_position.z;
+		int cur_index = controller->node->previous->current_waypoint_index;
+		double dist = calculate_distance(
+			controller->node->previous->asv->cog_position,
+			controller->node->previous->waypoints->points[cur_index]
+		);
+
+		if (dist < max_distance) max_distance = dist;
+		if (cur_index < lowest_waypoint_index) lowest_waypoint_index = cur_index;
 	}
 
 	if (controller->node->next != NULL) {
-		nextpoint.x = controller->node->next->asv->cog_position.x;
-		nextpoint.y = controller->node->next->asv->cog_position.y;
-		nextpoint.z = controller->node->next->asv->cog_position.z;
-	} else {
-		nextpoint.x = controller->node->previous->previous->asv->cog_position.x;
-		nextpoint.y = controller->node->previous->previous->asv->cog_position.y;
-		nextpoint.z = controller->node->previous->previous->asv->cog_position.z;
+		int cur_index = controller->node->next->current_waypoint_index;
+		double dist = calculate_distance(
+			controller->node->next->asv->cog_position,
+			controller->node->next->waypoints->points[cur_index]
+		);
+
+		if (dist < max_distance) max_distance = dist;
+		if (cur_index < lowest_waypoint_index) lowest_waypoint_index = cur_index;
 	}
 
-	double asv_slope = calculate_slope(prevpoint, nextpoint);
-	double angle = M_PI - fabs(atan(asv_slope) - (M_PI / 2));
-	double neg_angle = M_PI - angle;
-
-	if (asv_slope > 0) {
-		if (angle > 90) {
-			angle *= -1;
-		} else {
-			neg_angle *= -1;
-		}
-	} else {
-		if (angle < 90) {
-			angle *= -1;
-		} else {
-			neg_angle *= -1;
-		}
+	double speed = 1;
+	double cur_distance = calculate_distance(controller->asv_position, controller->old_way_point);
+	if ((controller->node->waypoints->points[0].x == 3000 && controller->node->current_waypoint_index == 1) || controller->node->current_waypoint_index > lowest_waypoint_index || cur_distance < max_distance) {
+		speed = 0;
 	}
-
-	if (angle < 0) {
-		double temp = neg_angle;
-		neg_angle = angle;
-		angle = temp;
-	}
-
-	double speed = 0.1;
-	if (controller->asv_attitude.z > neg_angle && controller->asv_attitude.z < angle) {
-		speed = 1;
-	}
-
-	if (controller->node->waypoints->points[0].x == 1000) printf("%f | %f | %f | %f\n", angle, neg_angle, controller->asv_attitude.z, speed);
-
-
-	// double average_distance = total_distance / count;
-	// double current_distance = calculate_distance(
-	// 	controller->asv_position,
-	// 	controller->node->waypoints->points[1]
-	// );
-
-	// double speed_diff = average_distance - current_distance;
-	// double speed;
-	// if (speed_diff > 100) {
-	// 	speed = 0.1;
-	// } else if (speed_diff > 80) {
-	// 	speed = 0.15;
-	// } else if (speed_diff > 60) {
-	// 	speed = 0.2;
-	// } else if (speed_diff > 40) {
-	// 	speed = 0.25;
-	// } else if (speed_diff > 20) {
-	// 	speed = 0.3;
-	// } else {
-	// 	speed = 1;
-	// }
-
-	// double speed = current_distance / average_distance;
-	// if (controller->node->waypoints->points[0].x == 1000)
-	// 	printf("%f\n", speed);
-	// 	printf("%f\n", controller->asv_attitude.z);
-	// printf("s: %f | ad: %f | cd: %f | td: %f | c: %f | %f | %f\n", speed, average_distance, current_distance, total_distance, count, controller->asv_position.x, controller->asv_position.y);
-
+	// if (controller->node->waypoints->points[0].x == 3000) printf("%f\n", speed);
 	return speed;
 }
 
@@ -187,30 +145,37 @@ void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 	double waypoint_y = controller->old_way_point.y;
 	double distance_threshold = 500;
 	if (calculate_distance(controller->asv_position, closest_cog_position) < distance_threshold) {
-		double rad_offset = 0.123598776;
-		double angle = calculate_angle(controller->asv_position, closest_cog_position, controller->old_way_point);
-		if (angle > 0) rad_offset *= -1;
+		double rad_offset = 0.1323598776;
+		// double angle = calculate_angle(controller->asv_position, closest_cog_position, controller->old_way_point);
+		// if (angle > 0) rad_offset *= -1;
 
-		double radius = calculate_distance(controller->asv_position, controller->old_way_point);
-		struct Dimensions offset_waypoint;
-		offset_waypoint.x = controller->asv_position.x;
-		offset_waypoint.y = controller->old_way_point.y + 2000;
-		offset_waypoint.z = controller->asv_position.z;
-		double offset_angle = (calculate_angle(controller->asv_position, controller->old_way_point, offset_waypoint));
-		waypoint_x = radius * sin(offset_angle + rad_offset) + controller->asv_position.x;
-		waypoint_y = radius * cos(offset_angle + rad_offset) + controller->asv_position.y;
+		// double radius = calculate_distance(controller->asv_position, controller->old_way_point);
+		// struct Dimensions offset_waypoint;
+		// offset_waypoint.x = controller->asv_position.x;
+		// offset_waypoint.y = controller->old_way_point.y + 2000;
+		// offset_waypoint.z = controller->asv_position.z;
+		// double offset_angle = (calculate_angle(controller->asv_position, controller->old_way_point, offset_waypoint));
+		// waypoint_x = radius * sin(rad_offset) + controller->asv_position.x;
+		// waypoint_y = radius * cos(rad_offset) + controller->asv_position.y;
 
-		// printf("a: %f | rf: %f | radius: %f | wx: %f | wy: %f| c: %f\n", angle, rad_offset, radius, waypoint_x, waypoint_y, calculate_distance(controller->asv_position, closest_cog_position));
+		struct Dimensions a1 = rotate(controller->old_way_point, rad_offset);
+		struct Dimensions a2 = rotate(controller->old_way_point, rad_offset * -1);
+
+		if (controller->node->waypoints->points[0].x == 2500)
+		printf("c: %f | a1x: %f | a1y: %f | a2x: %f | a2y: %f\n", calculate_distance(controller->asv_position, closest_cog_position), a1.x, a1.y, a2.x, a2.y);
+
+		if (calculate_distance(a1, closest_cog_position) > calculate_distance(a2, closest_cog_position)) {
+			waypoint_x = a1.x;
+			waypoint_y = a1.y;
+		} else {
+			waypoint_x = a2.x;
+			waypoint_y = a2.y;
+		}
 	}
 
-	if (controller->buffer_speed = 0) {
-		waypoint_x = controller->asv_position.x;
-		waypoint_y = controller->asv_position.y;
-	}
-
-	// controller->new_way_point.x = waypoint_x;
-	// controller->new_way_point.y = waypoint_y;
 	controller->new_way_point.x = waypoint_x;
 	controller->new_way_point.y = waypoint_y;
+	// controller->new_way_point.x = controller->old_way_point.x;
+	// controller->new_way_point.y = controller->old_way_point.y;
 	controller->new_way_point.z = controller->old_way_point.z;
 }
