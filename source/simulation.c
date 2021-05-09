@@ -788,11 +788,12 @@ void compute_dynamics(void* current_node)
   // Inform swarm controller of current waypoint
   swarm_controller_set_old_way_point(node->swarm_controller, node->waypoints->points[node->current_waypoint_index]);
   // Inform swarm controller of first waypoint
-  swarm_controller_set_first_waypoint(node->swarm_controller, node->waypoints->points[0]);
-  // Inform swarm controller of state of other ASVs
-  swarm_controller_set_asv_states(node->swarm_controller, node);
+  swarm_controller_set_first_waypoint(node->swarm_controller, node->waypoints->points[0], node->current_waypoint_index);
   // Inform swarm controller of the communication latency
-  swarm_controller_set_latency(node->swarm_controller, 10);
+  int latency_counter = swarm_controller_set_latency(node->swarm_controller, 1);
+  // Inform swarm controller of state of other ASVs
+  if (latency_counter == 0) swarm_controller_set_asv_states(node->swarm_controller, node);
+  // if (node->waypoints->points[0].x == 2500) printf("%d\n", latency_counter);
   // Moderate ASV speed by modifying y value of way point
   double speed = swarm_controller_moderate_speed(node->swarm_controller);
   // Swarm controller estimate location of new waypoint

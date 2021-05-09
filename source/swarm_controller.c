@@ -33,22 +33,45 @@ void swarm_controller_set_old_way_point(struct Swarm_controller* controller,
 }
 
 void swarm_controller_set_first_waypoint(struct Swarm_controller* controller,
-									  struct Dimensions first_waypoint)
+									  struct Dimensions first_waypoint, int current_waypoint_index)
 {
 	controller->first_waypoint.x = first_waypoint.x;
 	controller->first_waypoint.y = first_waypoint.y;
 	controller->first_waypoint.z = first_waypoint.z;
+	controller->current_waypoint_index = current_waypoint_index;
 }
 
 void swarm_controller_set_asv_states(struct Swarm_controller* controller,
 								  struct Simulation* node)
 {
-	controller->node = node;
+	controller->is_previous_null = node->previous == NULL;
+	if (!controller->is_previous_null) {
+		controller->previous_waypoint_index = node->previous->current_waypoint_index;
+		controller->previous_cog_position.x = node->previous->asv->cog_position.x;
+		controller->previous_cog_position.y = node->previous->asv->cog_position.y;
+		controller->previous_cog_position.z = node->previous->asv->cog_position.z;
+		controller->previous_waypoint.x = node->previous->waypoints->points[controller->previous_waypoint_index].x;
+		controller->previous_waypoint.y = node->previous->waypoints->points[controller->previous_waypoint_index].y;
+		controller->previous_waypoint.z = node->previous->waypoints->points[controller->previous_waypoint_index].z;
+	}
+
+	controller->is_next_null = node->next == NULL;
+	if (!controller->is_next_null) {
+		controller->next_waypoint_index = node->next->current_waypoint_index;
+		controller->next_cog_position.x = node->next->asv->cog_position.x;
+		controller->next_cog_position.y = node->next->asv->cog_position.y;
+		controller->next_cog_position.z = node->next->asv->cog_position.z;
+		controller->next_waypoint.x = node->next->waypoints->points[controller->next_waypoint_index].x;
+		controller->next_waypoint.y = node->next->waypoints->points[controller->next_waypoint_index].y;
+		controller->next_waypoint.z = node->next->waypoints->points[controller->next_waypoint_index].z;
+	}
 }
 
-void swarm_controller_set_latency(struct Swarm_controller* controller, int latency)
+int swarm_controller_set_latency(struct Swarm_controller* controller, int latency)
 {
 	controller->latency = latency;
+
+	return controller->latency_counter;
 }
 
 double calculate_distance(struct Dimensions d1, struct Dimensions d2)
@@ -87,11 +110,11 @@ double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 	double total_distance = 0;
 	double count = 0;
 	int lowest_waypoint_index = 1;
-	if (controller->node->previous != NULL) {
-		int cur_index = controller->node->previous->current_waypoint_index;
+	if (!controller->is_previous_null) {
+		int cur_index = controller->previous_waypoint_index;
 		double dist = calculate_distance(
-			controller->node->previous->asv->cog_position,
-			controller->node->previous->waypoints->points[cur_index]
+			controller->previous_cog_position,
+			controller->previous_waypoint
 		);
 
 		total_distance += dist;
@@ -99,11 +122,11 @@ double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 		if (cur_index < lowest_waypoint_index) lowest_waypoint_index = cur_index;
 	}
 
-	if (controller->node->next != NULL) {
-		int cur_index = controller->node->next->current_waypoint_index;
+	if (!controller->is_next_null) {
+		int cur_index = controller->next_waypoint_index;
 		double dist = calculate_distance(
-			controller->node->next->asv->cog_position,
-			controller->node->next->waypoints->points[cur_index]
+			controller->next_cog_position,
+			controller->next_waypoint
 		);
 
 		total_distance += dist;
@@ -114,7 +137,7 @@ double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 	double speed = 1;
 	double average_distance = total_distance / count;
 	double cur_distance = calculate_distance(controller->asv_position, controller->old_way_point);
-	if (controller->node->current_waypoint_index > lowest_waypoint_index || cur_distance < average_distance) {
+	if (controller->current_waypoint_index > lowest_waypoint_index || cur_distance < average_distance) {
 		speed = 0;
 	}
 
@@ -126,8 +149,8 @@ void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 	double waypoint_x = controller->old_way_point.x;
 	double waypoint_y = controller->old_way_point.y;
 
-	if (controller->node->next != NULL) {
-		double distance = calculate_distance(controller->asv_position, controller->node->next->asv->cog_position);
+	if (!controller->is_next_null) {
+		double distance = calculate_distance(controller->asv_position, controller->next_cog_position);
 		if (distance < 500) {
 			waypoint_x = controller->asv_position.x;
 			waypoint_y = controller->asv_position.y + 5000;
@@ -137,4 +160,9 @@ void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 	controller->new_way_point.x = waypoint_x;
 	controller->new_way_point.y = waypoint_y;
 	controller->new_way_point.z = controller->old_way_point.z;
+
+	controller->latency_counter--;
+	if (controller->latency_counter < 0) {
+		controller->latency_counter = controller->latency;
+	}
 }
