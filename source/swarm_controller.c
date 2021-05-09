@@ -83,7 +83,7 @@ struct Dimensions rotate(struct Dimensions d, double angle)
 }
 
 double swarm_controller_moderate_speed(struct Swarm_controller* controller)
-{	
+{
 	double total_distance = 0;
 	double count = 0;
 	int lowest_waypoint_index = 1;
@@ -126,21 +126,11 @@ void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 	double waypoint_x = controller->old_way_point.x;
 	double waypoint_y = controller->old_way_point.y;
 
-	if (waypoint_x > controller->asv_position.x) {
-		if (controller->node->next != NULL) {
-			double distance = calculate_distance(controller->asv_position, controller->node->next->asv->cog_position);
-			if (distance < 500) {
-				waypoint_x = controller->asv_position.x;
-				waypoint_y = controller->asv_position.y + 5000;
-			}
-		}
-	} else {
-		if (controller->node->previous != NULL) {
-			double distance = calculate_distance(controller->asv_position, controller->node->previous->asv->cog_position);
-			if (distance < 500) {
-				waypoint_x = controller->asv_position.x;
-				waypoint_y = controller->asv_position.y + 5000;
-			}
+	if (controller->node->next != NULL) {
+		double distance = calculate_distance(controller->asv_position, controller->node->next->asv->cog_position);
+		if (distance < 500) {
+			waypoint_x = controller->asv_position.x;
+			waypoint_y = controller->asv_position.y + 5000;
 		}
 	}
 

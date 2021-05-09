@@ -11,6 +11,9 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 
+from sklearn.metrics import r2_score
+from numpy.polynomial.polynomial import polyfit
+
 
 WAVE_HEIGHT = sys.argv[1]
 HEADING = sys.argv[2]
@@ -57,7 +60,7 @@ def calculate_average_speed(df, column, prev_column):
 	return average_speed
 
 history = {}
-def calculate_vertical_rss(df, column):
+def calculate_vertical_r2(df, column):
 	global history
 	x = []
 	y = []
@@ -72,21 +75,20 @@ def calculate_vertical_rss(df, column):
 			x.append(history[i][0])
 			y.append(history[i][1])
 
-	if x:
-		results = np.polyfit(x, y, 1)
-		pval = np.polyval(results, x) - y
-		rss = np.sum((pval)**2)
+	x = np.array(x)
+	y = np.array(y)
+
+	if x.size > 0:
+		b, m = polyfit(x, y, 1)
+		pred_y = b + m * x
+		rss = r2_score(y, pred_y)
 	else:
 		rss = None
 
 	return rss
 
-average_dist = 0
-count_dist = 0
 
 def calculate_distance_sd(df, column):
-	global average_dist
-	global count_dist
 	coords = []
 	for i in range(ASV_COUNT):
 		cur_x = df[column][f'asv{i}_x']
@@ -98,9 +100,7 @@ def calculate_distance_sd(df, column):
 	for i in range(1, len(coords)):
 		dist = np.linalg.norm(coords[i]-coords[i-1])
 		distances.append(dist)
-		average_dist += abs(500 - dist)
-		count_dist += 1
-	# print(distances)
+
 	sd = np.std(distances) if distances else None
 
 	return sd if sd else None
@@ -119,7 +119,7 @@ def calculate_performance(data):
 
 	for column in df:
 		v = calculate_average_speed(df, column, prev_column)
-		g = calculate_vertical_rss(df, column)
+		g = calculate_vertical_r2(df, column)
 		c = calculate_distance_sd(df, column)
 
 		if v is not None:
@@ -138,9 +138,9 @@ def calculate_performance(data):
 	G /= gcount
 	C /= ccount
 
-	print(f'V: {V} | G: {G} | C: {C}')
+	print(f'V: {round(V, 2)} | G: {round(G, 2)} | C: {round(C, 2)}')
 
-	return (V / (G + C)) * 100
+	return round((V * 100 / C) * G, 2)
 
 
 def generate_dataframe(directory, drop_y=False):
@@ -181,7 +181,7 @@ def show_animated_plot(data):
 
 	plt.draw()
 
-	S = 150
+	S = 500
 	skip = S
 	for column in df:
 		skip -= 1
@@ -237,9 +237,9 @@ def show_plot(directory, drop_y=False):
 if __name__ == "__main__":
 	directory = f'/home/akhi/Documents/p3project/ASVLite/build/run-{WAVE_HEIGHT}-{HEADING}-1'
 
-	# print(f'Swarm Performance: {calculate_performance(generate_dataframe(directory))}'); print(average_dist / count_dist)
-	show_animated_plot(generate_dataframe(directory))
-	# show_plot(directory)
+	# print(f'Swarm Performance: {calculate_performance(generate_dataframe(directory))}');
+	# show_animated_plot(generate_dataframe(directory))
+	show_plot(directory)
 
 	# count = 0
 	# total = 0
