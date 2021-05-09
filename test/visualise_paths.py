@@ -238,8 +238,8 @@ if __name__ == "__main__":
 	directory = f'/home/akhi/Documents/p3project/ASVLite/build/run-{WAVE_HEIGHT}-{HEADING}-1'
 
 	# print(f'Swarm Performance: {calculate_performance(generate_dataframe(directory))}'); print(average_dist / count_dist)
-	# show_animated_plot(generate_dataframe(directory))
-	show_plot(directory)
+	show_animated_plot(generate_dataframe(directory))
+	# show_plot(directory)
 
 	# count = 0
 	# total = 0
