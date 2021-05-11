@@ -11,7 +11,7 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 
-from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error
 from numpy.polynomial.polynomial import polyfit
 
 
@@ -78,7 +78,7 @@ def calculate_vertical_r2(df, column):
 	if x.size > 0:
 		b, m = polyfit(x, y, 1)
 		pred_y = b + m * x
-		r2 = r2_score(y, pred_y)
+		r2 = mean_squared_error(y, pred_y)
 	else:
 		r2 = None
 
@@ -137,7 +137,7 @@ def calculate_performance(data):
 
 	print(f'V: {round(V, 2)} | C: {round(C, 2)} | G: {round(G, 2)}')
 
-	return round((V * 100 / C) * G, 2)
+	return round((V * 1000) / (C * G), 2)
 
 
 def generate_dataframe(directory, drop_y=False):
@@ -250,10 +250,10 @@ if __name__ == "__main__":
 	# print(f'Scores: {scores}')
 
 	# average = total / count
-	# print(f'Average: {average}')
+	# print(f'Average: {round(average, 2)}')
 
 	# total2 = 0
 	# for s in scores:
 	# 	total2 += (s-average)**2
 
-	# print(f'Variance: {total2 / count}')
+	# print(f'Variance: {round(total2 / count, 2)}')
