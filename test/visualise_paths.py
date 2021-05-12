@@ -37,6 +37,7 @@ ASV_COUNT = 5
 
 
 def calculate_max_speed(df, column, prev_column):
+	"""Calculates the maximum speed of the ASVs in the column"""
 	max_speed = 0
 	if not prev_column:
 		max_speed = 0
@@ -56,8 +57,12 @@ def calculate_max_speed(df, column, prev_column):
 
 	return max_speed
 
+
 history = {}
-def calculate_vertical_r2(df, column):
+
+
+def calculate_vertical_mse(df, column):
+	"""Calculates the RMSE of the ASVs compared to the predicted y values produced by np.polyfit"""
 	global history
 	x = []
 	y = []
@@ -78,14 +83,15 @@ def calculate_vertical_r2(df, column):
 	if x.size > 0:
 		b, m = polyfit(x, y, 1)
 		pred_y = b + m * x
-		r2 = mean_squared_error(y, pred_y)
+		mse = mean_squared_error(y, pred_y)
 	else:
-		r2 = None
+		mse = None
 
-	return r2
+	return mse
 
 
 def calculate_distance_sd(df, column):
+	"""Calculates the maximum speed of the ASVs in the column"""
 	coords = []
 	for i in range(ASV_COUNT):
 		cur_x = df[column][f'asv{i}_x']
@@ -104,6 +110,7 @@ def calculate_distance_sd(df, column):
 
 
 def calculate_performance(data):
+	"""Calculates swarm performance using a performance function"""
 	df = pd.DataFrame(data)
 	prev_column = None
 
@@ -116,7 +123,7 @@ def calculate_performance(data):
 
 	for column in df:
 		v = calculate_max_speed(df, column, prev_column)
-		g = calculate_vertical_r2(df, column)
+		g = calculate_vertical_mse(df, column)
 		c = calculate_distance_sd(df, column)
 
 		if v is not None:
@@ -141,6 +148,7 @@ def calculate_performance(data):
 
 
 def generate_dataframe(directory, drop_y=False):
+	"""Generates a pandas dataframe containing the needed information from the specified log file"""
 	filenames = []
 	for filename in os.listdir(directory):
 		filenames.append(filename)
@@ -171,6 +179,7 @@ def generate_dataframe(directory, drop_y=False):
 
 
 def show_animated_plot(data):
+	"""Displays how the paths of ASVs progress as time goes on"""
 	df = pd.DataFrame(data)
 
 	x = []
@@ -203,6 +212,7 @@ def show_animated_plot(data):
 
 
 def show_plot(directory, drop_y=False):
+	"""Displays the paths of the ASVs"""
 	filenames = []
 	for filename in os.listdir(directory):
 		filenames.append(filename)

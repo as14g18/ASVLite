@@ -787,8 +787,6 @@ void compute_dynamics(void* current_node)
   swarm_controller_set_current_state(node->swarm_controller, node->asv->cog_position, node->asv->attitude);
   // Inform swarm controller of current waypoint
   swarm_controller_set_old_way_point(node->swarm_controller, node->waypoints->points[node->current_waypoint_index]);
-  // Inform swarm controller of first waypoint
-  swarm_controller_set_first_waypoint(node->swarm_controller, node->waypoints->points[0], node->current_waypoint_index);
   // Inform swarm controller of the communication latency
   int latency_counter = swarm_controller_set_latency(node->swarm_controller, 1);
   // Inform swarm controller of state of other ASVs
@@ -811,15 +809,6 @@ void compute_dynamics(void* current_node)
   node->asv->propellers[1].thrust = node->pid_controller->thrust_fore_sb; //N
   node->asv->propellers[2].thrust = node->pid_controller->thrust_aft_ps;  //N
   node->asv->propellers[3].thrust = node->pid_controller->thrust_aft_sb;  //N
-
-  // printf(
-  //   "THRUST %f %f %f %f ",
-  //   node->pid_controller->thrust_fore_ps,
-  //   node->pid_controller->thrust_fore_sb,
-  //   node->pid_controller->thrust_aft_ps,
-  //   node->pid_controller->thrust_aft_sb
-  // );
-
 
   // Compute the dynamics of asv for the current time step
   asv_compute_dynamics(node->asv, current_time);
@@ -1005,17 +994,6 @@ void simulation_run_with_visualisation(struct Simulation* first_node, bool show_
           node->asv->attitude.x,
           node->asv->attitude.y
         );
-
-        // printf(
-        //   "MOVE %d %f %f %f %f %f %f",
-        //   node->id,
-        //   node->asv->origin_position.x,
-        //   node->asv->origin_position.y,
-        //   node->asv->origin_position.z,
-        //   node->asv->attitude.z,
-        //   node->asv->attitude.x,
-        //   node->asv->attitude.y
-        // );
 
         send_message_through_pipe(move_str, fd);
       }

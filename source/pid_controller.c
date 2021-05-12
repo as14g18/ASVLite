@@ -182,10 +182,4 @@ void pid_controller_set_thrust(struct PID_controller* controller)
 
   controller->thrust_fore_ps = controller->thrust_aft_ps  = thrust_ps;
   controller->thrust_fore_sb = controller->thrust_aft_sb  = thrust_sb;
-
-  // if ((controller->way_point.x == 3000 || controller->way_point.y == 1000)) {
-  //   printf("x: %f | y: %f | wx: %f | wy: %f | ps: %f | sb: %f | ep: %f | eip: %f | edp: %f | pt: %f\n", controller->asv_position.x, controller->asv_position.y, controller->way_point.x, controller->way_point.y, thrust_ps, thrust_sb, controller->error_position, controller->error_int_position, controller->error_diff_position);
-  //   printf("speed: %f\n", controller->speed);
-  // }
-  
 }

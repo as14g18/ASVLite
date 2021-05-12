@@ -66,6 +66,9 @@ void pid_controller_set_current_state(struct PID_controller* controller,
                                       struct Dimensions position,
                                       struct Dimensions attitude);
 
+/**
+ * Function to set the speed of the ASV - either 0 or 1.
+ */
 void pid_controller_set_speed(struct PID_controller* controller,
                               double speed);
 

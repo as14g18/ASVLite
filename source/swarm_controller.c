@@ -8,7 +8,6 @@
 
 void swarm_controller_init(struct Swarm_controller* controller)
 {
-  controller->buffer_speed = 100;
   controller->latency_counter = 0;
 }
 
@@ -30,15 +29,6 @@ void swarm_controller_set_old_way_point(struct Swarm_controller* controller,
   controller->old_way_point.x = way_point.x;
   controller->old_way_point.y = way_point.y;
   controller->old_way_point.z = way_point.z;
-}
-
-void swarm_controller_set_first_waypoint(struct Swarm_controller* controller,
-									  struct Dimensions first_waypoint, int current_waypoint_index)
-{
-	controller->first_waypoint.x = first_waypoint.x;
-	controller->first_waypoint.y = first_waypoint.y;
-	controller->first_waypoint.z = first_waypoint.z;
-	controller->current_waypoint_index = current_waypoint_index;
 }
 
 void swarm_controller_set_asv_states(struct Swarm_controller* controller,
@@ -107,6 +97,7 @@ struct Dimensions rotate(struct Dimensions d, double angle)
 
 double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 {
+	// Calculate the average distance to waypoint for neighbouring ASVs
 	double total_distance = 0;
 	double count = 0;
 	int lowest_waypoint_index = 1;
@@ -134,6 +125,7 @@ double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 		if (cur_index < lowest_waypoint_index) lowest_waypoint_index = cur_index;
 	}
 
+	// Set the speed to 0 if distance is less than average distance of neighbours
 	double speed = 1;
 	double average_distance = total_distance / count;
 	double cur_distance = calculate_distance(controller->asv_position, controller->old_way_point);
@@ -149,6 +141,7 @@ void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 	double waypoint_x = controller->old_way_point.x;
 	double waypoint_y = controller->old_way_point.y;
 
+	// Moves away from a neighbouring ASV if the distance is less than the distance threshold
 	if (!controller->is_next_null) {
 		double distance = calculate_distance(controller->asv_position, controller->next_cog_position);
 		if (distance < 500) {
@@ -161,6 +154,7 @@ void swarm_controller_set_new_way_point(struct Swarm_controller* controller)
 	controller->new_way_point.y = waypoint_y;
 	controller->new_way_point.z = controller->old_way_point.z;
 
+	// Increment latency counter
 	controller->latency_counter--;
 	if (controller->latency_counter < 0) {
 		controller->latency_counter = controller->latency;
