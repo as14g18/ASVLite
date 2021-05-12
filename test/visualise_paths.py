@@ -244,26 +244,26 @@ def show_plot(directory, drop_y=False):
 if __name__ == "__main__":
 	directory = f'/home/akhi/Documents/p3project/ASVLite/build/run-{WAVE_HEIGHT}-{HEADING}-1'
 
-	# print(f'Swarm Performance: {calculate_performance(generate_dataframe(directory))}');
-	# show_animated_plot(generate_dataframe(directory))
+	print(f'Swarm Performance: {calculate_performance(generate_dataframe(directory))}');
+	show_animated_plot(generate_dataframe(directory))
 	show_plot(directory)
 
-	# count = 0
-	# total = 0
-	# scores = []
-	# for directory in DIRECTORIES:
-	# 	s = calculate_performance(generate_dataframe(directory))
-	# 	scores.append(s)
-	# 	total += s
-	# 	count += 1
+	count = 0
+	total = 0
+	scores = []
+	for directory in DIRECTORIES:
+		s = calculate_performance(generate_dataframe(directory))
+		scores.append(s)
+		total += s
+		count += 1
 
-	# print(f'Scores: {scores}')
+	print(f'Scores: {scores}')
 
-	# average = total / count
-	# print(f'Average: {round(average, 2)}')
+	average = total / count
+	print(f'Average: {round(average, 2)}')
 
-	# total2 = 0
-	# for s in scores:
-	# 	total2 += (s-average)**2
+	total2 = 0
+	for s in scores:
+		total2 += (s-average)**2
 
-	# print(f'Variance: {round(total2 / count, 2)}')
+	print(f'Variance: {round(total2 / count, 2)}')

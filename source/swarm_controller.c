@@ -69,32 +69,6 @@ double calculate_distance(struct Dimensions d1, struct Dimensions d2)
 	return sqrt(pow(d1.x - d2.x, 2) + pow(d1.y - d2.y, 2));
 }
 
-double calculate_angle(struct Dimensions v, struct Dimensions a, struct Dimensions b)
-{
-	return atan2(b.y - v.y, b.x - v.x) - atan2(a.y - v.y, a.x - v.x);
-}
-
-bool equal_dimensions(struct Dimensions d1, struct Dimensions d2)
-{
-	return d1.x == d2.x && d1.y == d2.y;
-}
-
-double calculate_slope(struct Dimensions d1, struct Dimensions d2)
-{
-	if (d2.x == d1.x) return DBL_MAX;
-	return (d2.y - d1.y) / (d2.x - d1.x);
-}
-
-struct Dimensions rotate(struct Dimensions d, double angle)
-{
-	struct Dimensions w;
-	w.x = d.x * cos(angle) + d.y * sin(angle);
-	w.y = -d.x * sin(angle) + d.y * cos(angle);
-	w.z = 0;
-
-    return w;
-}
-
 double swarm_controller_moderate_speed(struct Swarm_controller* controller)
 {
 	// Calculate the average distance to waypoint for neighbouring ASVs
